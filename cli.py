@@ -35,7 +35,11 @@ def setup_cli():
     # Delete All Command
     subparsers.add_parser("delete_all", help="Delete all entries")
 
+    # Help Command
+    subparsers.add_parser("help", help="Show help information for available commands")
+
     return parser
+
 
 def main():
     """
@@ -52,11 +56,17 @@ def main():
 
     if not database_exists:
         print("Welcome to the Expense Tracker!")
-        print("Available commands:")
-        print("  add <amount> <category> <date> \"<description>\"")
-        print("  view")
-        print("  delete <entry_id>")
-        print("  delete_all")
+        print("To get started, use the following commands:")
+        print("  python expense_tracker.py add <amount> <category> <date> \"<description>\"")
+        print("  python expense_tracker.py view")
+        print("  python expense_tracker.py delete <entry_id>")
+        print("  python expense_tracker.py delete_all")
+        print("  python expense_tracker.py help")
+        print("Note: Make sure to prefix commands with 'python expense_tracker.py'")
+    else:
+        print("Welcome back to the Expense Tracker!")
+        print("To see available commands, use:")
+        print("  python expense_tracker.py help")
 
     create_database()
     renumbered_ids()
@@ -65,7 +75,6 @@ def main():
 
     try:
         args = parser.parse_args()
-        # Your existing code for handling different commands
         match args.command:
             case "add":
                 add_expense(args.amount, args.category, args.date, args.description)
@@ -75,6 +84,8 @@ def main():
                 delete_all_entries()
             case "delete":
                 delete_entry_by_id(args.entry_id)
+            case "help":
+                parser.print_help()
             case _:
                 pass
     except argparse.ArgumentError as e:
