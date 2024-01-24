@@ -1,6 +1,7 @@
 import argparse
 import os
 from datetime import datetime
+import shlex
 from database import create_database, add_expense, view_expenses, renumbered_ids, delete_all_entries, delete_entry_by_id
 
 # CLI Setup
@@ -41,55 +42,75 @@ def setup_cli():
     return parser
 
 
-def main():
-    """
-    Main function for the Expense Tracker program.
-
-    Parameters:
-    None
-
-    Returns:
-    None
-    """
-    # Check if the database file exists
-    database_exists = os.path.isfile("expenses.db")
-
-    if not database_exists:
+def run_expense_tracker(first_run):
+    #print("Inside run_expense_tracker function.")
+    
+    if first_run:
+        print("First run.")
         print("Welcome to the Expense Tracker!")
         print("To get started, use the following commands:")
-        print("  python expense_tracker.py add <amount> <category> <date> \"<description>\"")
-        print("  python expense_tracker.py view")
-        print("  python expense_tracker.py delete <entry_id>")
-        print("  python expense_tracker.py delete_all")
-        print("  python expense_tracker.py help")
-        print("Note: Make sure to prefix commands with 'python expense_tracker.py'")
+        print("  add <amount> <category> <date> \"<description>\"")
+        print("  view")
+        print("  delete <entry_id>")
+        print("  delete_all")
+        print("  help")
+        print("Note: No need to prefix commands with 'python' or use file extension.")
+    
     else:
         print("Welcome back to the Expense Tracker!")
         print("To see available commands, use:")
-        print("  python expense_tracker.py help")
-
-    create_database()
-    renumbered_ids()
+        print("  help")
 
     parser = setup_cli()
+    
+    while True:
+        try:
+            # If no command-line arguments, use interactive input
+            user_input = input("Enter command: ")
+            args = parser.parse_args(shlex.split(user_input))
+        
+            #print(f"Parsed arguments: {args}")
+        
+            match args.command:
+                case "add":
+                    #print("Executing 'add' command.")
+                    add_expense(args.amount, args.category, args.date, args.description)
+                case "view":
+                    print("Executing 'view' command.")
+                    view_expenses()
+                case "delete_all":
+                    #print("Executing 'delete_all' command.")
+                    delete_all_entries()
+                case "delete":
+                    print("Executing 'delete' command.")
+                    delete_entry_by_id(args.entry_id)
+                case "help":
+                    #print("Executing 'help' command.")
+                    parser.print_help()
+                case _:
+                    print("No valid command.")
 
-    try:
-        args = parser.parse_args()
-        match args.command:
-            case "add":
-                add_expense(args.amount, args.category, args.date, args.description)
-            case "view":
-                view_expenses()
-            case "delete_all":
-                delete_all_entries()
-            case "delete":
-                delete_entry_by_id(args.entry_id)
-            case "help":
-                parser.print_help()
-            case _:
-                pass
-    except argparse.ArgumentError as e:
-        print(f"ArgumentError: {e}")
+        except argparse.ArgumentError as e:
+            print(f"ArgumentError: {e}")
+            
+                               
 
 if __name__ == "__main__":
-    main()
+    first_run = not os.path.isfile("expenses.db")
+
+    create_database()
+    
+
+    print("Please enter a letter to coninue or type 'exit' to quit: ")
+    user_input = input().lower()
+
+    while user_input != 'exit':
+        if user_input.strip():
+            try:
+                run_expense_tracker(first_run)
+            except Exception as e:
+                print(f"An unexpected error occurred: {e}")
+
+        print("Please enter a letter to coninue or type 'exit' to quit: ")
+        user_input = input().lower()
+        first_run = False  # Set to False after the first run

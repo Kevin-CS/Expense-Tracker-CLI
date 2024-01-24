@@ -1,5 +1,12 @@
 import sqlite3
+import os
 from datetime import datetime
+
+# Configure DB path
+db_filename = "expenses.db"  
+db_dir = os.path.join(os.getcwd(), "data")
+db_path = os.path.join(db_dir, db_filename)
+os.makedirs(db_dir, exist_ok=True)
 
 # Database Creation
 def create_database():
@@ -13,7 +20,7 @@ def create_database():
     None
     """
     try:
-        with sqlite3.connect("expenses.db") as conn:
+        with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
 
             create_expenses_table = """
@@ -35,6 +42,8 @@ def create_database():
 
             cursor.execute(create_expenses_table)
             cursor.execute(create_categories_table)
+            
+            renumbered_ids()
 
     except sqlite3.Error as e:
         print(f"SQLite Error: {e}")
@@ -55,7 +64,7 @@ def add_expense(amount, category, date, description):
     None
     """
     try:
-        with sqlite3.connect("expenses.db") as conn:
+        with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
 
             # Check if the category exists, if not, add it
@@ -99,7 +108,7 @@ def view_expenses():
     None
     """
     try:
-        with sqlite3.connect("expenses.db") as conn:
+        with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
 
             select_query = "SELECT * FROM expenses_view;"
@@ -142,7 +151,7 @@ def renumbered_ids():
     None
     """
     try:
-        with sqlite3.connect("expenses.db") as conn:
+        with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
 
             cursor.execute("SELECT name FROM sqlite_master WHERE type='view' AND name='expenses_view';")
@@ -156,6 +165,7 @@ def renumbered_ids():
                 SELECT ROW_NUMBER() OVER (ORDER BY id) AS row_number, amount, category, date, description
                 FROM expenses;
             """)
+            print("View 'expenses_view' created successfully.")
     except sqlite3.Error as e:
         print(f"SQLite Error: {e}")
 
@@ -172,7 +182,7 @@ def delete_all_entries():
     Returns:
     None
     """
-    with sqlite3.connect("expenses.db") as conn:
+    with sqlite3.connect(db_path) as conn:
         cursor = conn.cursor()
 
     try:
@@ -195,7 +205,7 @@ def delete_entry_by_id(entry_id):
     None
     """
     try:
-        with sqlite3.connect("expenses.db") as conn:
+        with sqlite3.connect(db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("DELETE FROM expenses WHERE id=?", (entry_id,))
             print(f"Entry with ID {entry_id} deleted successfully.")
